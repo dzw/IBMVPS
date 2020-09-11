@@ -30,20 +30,71 @@ rm -rf v2ray-linux-64.zip
 mv $HOME/cloudfoundry/v2ray1/v2ray $HOME/cloudfoundry/v2ray
 mv $HOME/cloudfoundry/v2ray1/v2ctl $HOME/cloudfoundry/v2ctl
 rm -rf $HOME/cloudfoundry/v2ray1
-uuid=`cat /proc/sys/kernel/random/uuid`
 
-path=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
-echo '{"inbounds":[{"port":8080,"protocol":"vmess","settings":{"clients":[{"id":"'$uuid'","alterId":64}]},"streamSettings":{"network":"ws","wsSettings":{"path":"/'$path'"}}}],"outbounds":[{"protocol":"freedom","settings":{}}]}'>$HOME/cloudfoundry/config.json
+UUID=$(cat /proc/sys/kernel/random/uuid)
+WSPATH=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
+
+cat > $HOME/cloudfoundry/config.json << EOF
+{
+  "inbounds": [
+    {
+      "port": 29850,
+      "protocol": "vmess",
+      "settings": {
+        "clients": [
+          {
+            "id": "$UUID",
+            "alterId": 4
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/${WSPATH}"
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "settings": {}
+    }
+  ]
+}
+
+EOF
+
 echo 'applications:'>>manifest.yml
 echo '- path: .'>>manifest.yml
 echo '  command: '/app/htdocs/v2ray'' >>manifest.yml
 echo '  name: '$appname''>>manifest.yml
 echo '  random-route: true'>>manifest.yml
 echo '  memory: '$ramsize'M'>>manifest.yml
+
 ibmcloud target --cf
 ibmcloud cf push
+
 domain=`ibmcloud cf app $appname | grep routes | cut -f2 -d':' | sed 's/ //g'`
-vmess=`echo '{"add":"'$domain'","aid":"64","host":"","id":"'$uuid'","net":"ws","path":"/'$path'","port":"443","ps":"IBMVPS","tls":"tls","type":"none","v":"2"}' | base64 -w 0`
+
+VMESSCODE=$(base64 -w 0 << EOF
+{
+	"v": "2",
+	"add": "${domain}",
+	"id": "${UUID}",
+	"aid": "4",
+	"net": "ws",
+	"path": "/${WSPATH}",
+	"port": "29850",
+	"ps": "IBMVPS",
+	"type": "none",
+	"host": ""
+}
+
+EOF
+)
+
 cd ..
     echo "Telegram：@bigfangfang"
     echo "Telegram Group：https://t.me/dafangbigfang"
@@ -54,8 +105,8 @@ cd ..
     echo ""
 echo 配置信息
 echo 地址: $domain
-echo UUID: $uuid
-echo path: /$path
+echo UUID: $UUID
+echo path: /$WSPATH
 echo ""
 echo 配置成功
-echo vmess://$vmess
+echo vmess://$VMESSCODE
