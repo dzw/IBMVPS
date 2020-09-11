@@ -38,7 +38,7 @@ cat > $HOME/cloudfoundry/config.json << EOF
 {
   "inbounds": [
     {
-      "port": 443,
+      "port": 8080,
       "protocol": "vmess",
       "settings": {
         "clients": [
@@ -86,7 +86,7 @@ VMESSCODE=$(base64 -w 0 << EOF
 	"aid": "4",
 	"net": "ws",
 	"path": "/${WSPATH}",
-	"port": "443",
+	"port": "8080",
 	"ps": "IBMVPS",
 	"type": "none",
 	"host": ""
