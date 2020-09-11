@@ -38,21 +38,18 @@ cat > $HOME/cloudfoundry/config.json << EOF
 {
   "inbounds": [
     {
-      "port": 8080,
+      "port": 9090,
       "protocol": "vmess",
       "settings": {
         "clients": [
           {
             "id": "$UUID",
-            "alterId": 4
+            "alterId": 64
           }
         ]
       },
       "streamSettings": {
-        "network": "ws",
-        "wsSettings": {
-          "path": "/${WSPATH}"
-        }
+        "network": "tcp"
       }
     }
   ],
@@ -83,10 +80,9 @@ VMESSCODE=$(base64 -w 0 << EOF
 	"v": "2",
 	"add": "${domain}",
 	"id": "${UUID}",
-	"aid": "4",
-	"net": "ws",
-	"path": "/${WSPATH}",
-	"port": "8080",
+	"aid": "64",
+	"net": "tcp",
+	"port": "9090",
 	"ps": "IBMVPS",
 	"type": "none",
 	"host": ""
